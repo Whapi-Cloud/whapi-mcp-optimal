@@ -115,9 +115,56 @@ for (const tool of manifest) {
 }
 log(`tools:registered:${manifest.length}`);
 
-// Minimal prompt/resource to satisfy clients expecting these capabilities
-server.prompt('noop', 'No-op prompt', async () => ({ messages: [] }));
-server.resource('about', 'about://whapi-mcp-optimal', async () => ({ contents: [{ type: 'text', text: 'whapi-mcp-optimal' }] }));
+// Useful prompts for common WhatsApp operations
+server.prompt('send-text-message', 'Send a text message via WhatsApp', async (args) => ({
+  messages: [{
+    role: 'user',
+    content: {
+      type: 'text',
+      text: `Send a WhatsApp text message to ${args?.to || 'a contact'}. ${args?.body ? `Message: "${args.body}"` : 'Ask the user for the recipient phone number and message text.'}`
+    }
+  }]
+}));
+
+server.prompt('send-media-message', 'Send a media message (image/video/document) via WhatsApp', async (args) => ({
+  messages: [{
+    role: 'user',
+    content: {
+      type: 'text',
+      text: `Send a WhatsApp media message to ${args?.to || 'a contact'}. ${args?.media ? `Media URL: ${args.media}` : 'Ask the user for the recipient phone number, media type (image/video/document), and media URL or file path.'}`
+    }
+  }]
+}));
+
+server.prompt('manage-group', 'Manage WhatsApp group (add members, accept invites)', async (args) => ({
+  messages: [{
+    role: 'user',
+    content: {
+      type: 'text',
+      text: `Help manage a WhatsApp group. ${args?.action ? `Action: ${args.action}` : 'Available actions: add members to a group, accept group invite, get group information. Ask the user what they want to do.'}`
+    }
+  }]
+}));
+
+server.prompt('check-contact', 'Check if a phone number has WhatsApp', async (args) => ({
+  messages: [{
+    role: 'user',
+    content: {
+      type: 'text',
+      text: `Check if ${args?.phone ? `phone number ${args.phone}` : 'a phone number'} has WhatsApp. ${args?.phone ? 'Use the checkPhones tool.' : 'Ask the user for the phone number to check.'}`
+    }
+  }]
+}));
+
+server.prompt('get-chats', 'Get list of WhatsApp chats', async () => ({
+  messages: [{
+    role: 'user',
+    content: {
+      type: 'text',
+      text: 'Get the list of WhatsApp chats. Use the getChats tool to retrieve all conversations.'
+    }
+  }]
+}));
 
 await server.connect(new StdioServerTransport());
 log('server:connected');
