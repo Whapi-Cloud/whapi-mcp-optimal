@@ -1,0 +1,11 @@
+exports["checkHealth"] = require('./checkHealth.js');
+exports["updateChannelSettings"] = require('./updateChannelSettings.js');
+exports["loginUser"] = require('./loginUser.js');
+exports["getMessages"] = require('./getMessages.js');
+exports["sendMessageText"] = require('./sendMessageText.js');
+exports["sendMediaMessage"] = require('./sendMediaMessage.js');
+exports["getChats"] = require('./getChats.js');
+exports["checkPhones"] = require('./checkPhones.js');
+exports["getGroups"] = require('./getGroups.js');
+exports["acceptGroupInvite"] = require('./acceptGroupInvite.js');
+exports["addGroupParticipant"] = require('./addGroupParticipant.js');

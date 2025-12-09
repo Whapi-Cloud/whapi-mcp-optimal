@@ -1,0 +1,36 @@
+{
+  "name": "whapi-mcp-optimal",
+  "version": "1.0.0",
+  "private": false,
+  "type": "commonjs",
+  "bin": {
+    "mcp-whapi-optimal": "bin/mcp-whapi.cjs"
+  },
+  "files": [
+    "server.mjs",
+    "bin/**",
+    "generated-mcp/**",
+    "B_manifest.json",
+    "README.md",
+    "package.json"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "model context protocol",
+    "whapi",
+    "whatsapp"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/whapi-mcp-optimal.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.10.2",
+    "zod": "^3.23.8",
+    "node-fetch": "^2.7.0"
+  }
+}

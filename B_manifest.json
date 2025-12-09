@@ -1,0 +1,1991 @@
+[
+  {
+    "toolName": "checkHealth",
+    "summary": "Check health & launch channel",
+    "description": "Allows you to track and get feedback on the operational status of the whapi channel (instance). An instance is a connection with a phone number that has a WhatsApp account, which will be responsible for sending and receiving messages",
+    "tags": [
+      "Channel"
+    ],
+    "http": {
+      "method": "GET",
+      "path": "/health",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "wakeup",
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "description": "If set to false, the channel will not launch"
+        },
+        {
+          "name": "platform",
+          "type": "string",
+          "required": false,
+          "description": "Browser name, OS name, OS version separated by commas. Example: 'Safari,Windows,10.0.19044' or 'Desktop,Mac OS,11.6.3'"
+        },
+        {
+          "name": "channel_type",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "web",
+            "mobile"
+          ],
+          "default": "web",
+          "description": "Channel type. Web - for linking existing WA account via WA Web, Mobile - for creating new WA account"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": null,
+        "schema": null,
+        "fields": []
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wakeup": {
+          "type": "boolean",
+          "description": "If set to false, the channel will not launch",
+          "default": true
+        },
+        "platform": {
+          "type": "string",
+          "description": "Browser name, OS name, OS version separated by commas. Example: 'Safari,Windows,10.0.19044' or 'Desktop,Mac OS,11.6.3'"
+        },
+        "channel_type": {
+          "type": "string",
+          "description": "Channel type. Web - for linking existing WA account via WA Web, Mobile - for creating new WA account",
+          "enum": [
+            "web",
+            "mobile"
+          ],
+          "default": "web"
+        }
+      },
+      "required": []
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X GET -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/health?wakeup=true&platform=Chrome%2CWhapi%2C1.6.0&channel_type=web\""
+      }
+    ]
+  },
+  {
+    "toolName": "updateChannelSettings",
+    "summary": "Update channel settings",
+    "description": "If a field is not present in the request, no change is made to that setting. For example, if 'proxy' is not sent with the request, the existing configuration for 'proxy' is unchanged.",
+    "tags": [
+      "Channel"
+    ],
+    "http": {
+      "method": "PATCH",
+      "path": "/settings",
+      "pathParams": [],
+      "queryParams": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "schema": {
+          "title": "Channel Settings",
+          "type": "object",
+          "properties": {
+            "callback_backoff_delay_ms": {
+              "description": "Backoff delay for a failed callback in milliseconds This setting is used to configure the amount of time the backoff delays before retrying a failed callback. The backoff delay increases linearly by this value each time a callback fails to get a HTTPS 200 OK response. The backoff delay is capped by the max_callback_backoff_delay_ms setting.",
+              "type": "number",
+              "minimum": 3000,
+              "maximum": 15000
+            },
+            "max_callback_backoff_delay_ms": {
+              "description": "Maximum delay for a failed callback in milliseconds",
+              "type": "number",
+              "minimum": 600000,
+              "maximum": 3600000
+            },
+            "callback_persist": {
+              "description": "Stores callbacks on disk until they are successfully acknowledged by the Webhook or not. Restart required.",
+              "type": "boolean"
+            },
+            "media": {
+              "title": "Media",
+              "type": "object",
+              "properties": {
+                "auto_download": {
+                  "description": "An array specifying which types of media to automatically download.",
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "image",
+                      "audio",
+                      "voice",
+                      "video",
+                      "document",
+                      "sticker"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "init_avatars": {
+                  "description": "Set to true if you need to get avatars after channel authorization",
+                  "type": "boolean"
+                }
+              }
+            },
+            "webhooks": {
+              "title": "Webhooks",
+              "type": "array",
+              "items": {
+                "title": "Webhook",
+                "type": "object",
+                "required": [
+                  "url"
+                ],
+                "allOf": [
+                  {
+                    "title": "WebhookParameters",
+                    "type": "object",
+                    "properties": {
+                      "headers": {
+                        "type": "object",
+                        "description": "Additional headers for webhook. Max 5 headers. <br/>Example: <br/>\"Authorization - Bearer token\" <br/>\"Content-Type - application/json\" <br/>\"X-Header - value\"",
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      },
+                      "url": {
+                        "description": "Inbound and outbound notifications are routed to this URL.",
+                        "type": "string"
+                      },
+                      "mode": {
+                        "type": "string",
+                        "default": "body",
+                        "enum": [
+                          "body",
+                          "path",
+                          "method"
+                        ],
+                        "description": "Request method for sending hook."
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "events": {
+                        "type": "array",
+                        "items": {
+                          "title": "Event",
+                          "type": "object",
+                          "allOf": [
+                            {
+                              "title": "Webhook Event Type",
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "enum": [
+                                    "messages",
+                                    "statuses",
+                                    "chats",
+                                    "contacts",
+                                    "groups",
+                                    "presences",
+                                    "calls",
+                                    "channel",
+                                    "users",
+                                    "labels",
+                                    "service"
+                                  ]
+                                }
+                              }
+                            },
+                            {
+                              "properties": {
+                                "method": {
+                                  "type": "string",
+                                  "enum": [
+                                    "post",
+                                    "put",
+                                    "delete",
+                                    "patch"
+                                  ]
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "default": [
+                          {
+                            "type": "message",
+                            "method": "put"
+                          }
+                        ],
+                        "description": "Tracked events. <br/>\"messages\" - got new message/got offline messages/edit message/delete message;<br/>\"statuses\" - got message status/got offline message status;<br/>\"chats\" - got chat/chat update/chat remove;<br/>\"contacts\" - contact update;<br/>\"presences\" - got presences<br/>\"groups\" - new group/participants update/group update;<br/>\"calls\" - got call events<br/>labels\" - new label/remove label<br/>\"users\" - login user/logout user<br/>\"channel\" - instance status changed/QR-code update<br/>\"service\" - special notifications<br/><br/>\"message\", \"ack\", \"chat\", \"status\" - is deprecated, use \"messages\", \"statuses\", \"chats\", \"channel\" instead."
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "proxy": {
+              "description": "Use your Socks5 proxy if your account activity arouses suspicion from WhatsApp. This can help maintain anonymity and ensure smooth operation.",
+              "type": "string",
+              "pattern": "^socks5h?:\\/\\/([!-\\/:-@[-`{-~a-zA-Z0-9_-]+):([a-zA-Z0-9_-]+)@(((?:[0-9]{1,3}\\.){3}[0-9]{1,3})|[a-zA-Z0-9.]+):([0-9]{1,5})$|^$"
+            },
+            "mobile_proxy": {
+              "description": "Service proxy for mobile authorization.",
+              "type": "string"
+            },
+            "offline_mode": {
+              "description": "When true, API will not send online status to the server on connection. This will allow you to receive push notifications to devices connected to the number. Working after reconnect.",
+              "default": false,
+              "type": "boolean"
+            },
+            "full_history": {
+              "description": "When true, all messages will be cached after the connection. If false, old messages will selectively not be cached, allowing large accounts to run faster. Working after reconnect.",
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        },
+        "fields": [
+          {
+            "name": "callback_backoff_delay_ms",
+            "type": "number",
+            "required": false,
+            "description": "Backoff delay for a failed callback in milliseconds This setting is used to configure the amount of time the backoff delays before retrying a failed callback. The backoff delay increases linearly by this value each time a callback fails to get a HTTPS 200 OK response. The backoff delay is capped by the max_callback_backoff_delay_ms setting."
+          },
+          {
+            "name": "max_callback_backoff_delay_ms",
+            "type": "number",
+            "required": false,
+            "description": "Maximum delay for a failed callback in milliseconds"
+          },
+          {
+            "name": "callback_persist",
+            "type": "boolean",
+            "required": false,
+            "description": "Stores callbacks on disk until they are successfully acknowledged by the Webhook or not. Restart required."
+          },
+          {
+            "name": "media",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "webhooks",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "proxy",
+            "type": "string",
+            "required": false,
+            "description": "Use your Socks5 proxy if your account activity arouses suspicion from WhatsApp. This can help maintain anonymity and ensure smooth operation."
+          },
+          {
+            "name": "mobile_proxy",
+            "type": "string",
+            "required": false,
+            "description": "Service proxy for mobile authorization."
+          },
+          {
+            "name": "offline_mode",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "When true, API will not send online status to the server on connection. This will allow you to receive push notifications to devices connected to the number. Working after reconnect."
+          },
+          {
+            "name": "full_history",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "When true, all messages will be cached after the connection. If false, old messages will selectively not be cached, allowing large accounts to run faster. Working after reconnect."
+          }
+        ]
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "callback_backoff_delay_ms": {
+          "type": "number",
+          "description": "Backoff delay for a failed callback in milliseconds This setting is used to configure the amount of time the backoff delays before retrying a failed callback. The backoff delay increases linearly by this value each time a callback fails to get a HTTPS 200 OK response. The backoff delay is capped by the max_callback_backoff_delay_ms setting."
+        },
+        "max_callback_backoff_delay_ms": {
+          "type": "number",
+          "description": "Maximum delay for a failed callback in milliseconds"
+        },
+        "callback_persist": {
+          "type": "boolean",
+          "description": "Stores callbacks on disk until they are successfully acknowledged by the Webhook or not. Restart required."
+        },
+        "media": {
+          "type": "object"
+        },
+        "webhooks": {
+          "type": "array"
+        },
+        "proxy": {
+          "type": "string",
+          "description": "Use your Socks5 proxy if your account activity arouses suspicion from WhatsApp. This can help maintain anonymity and ensure smooth operation."
+        },
+        "mobile_proxy": {
+          "type": "string",
+          "description": "Service proxy for mobile authorization."
+        },
+        "offline_mode": {
+          "type": "boolean",
+          "description": "When true, API will not send online status to the server on connection. This will allow you to receive push notifications to devices connected to the number. Working after reconnect.",
+          "default": false
+        },
+        "full_history": {
+          "type": "boolean",
+          "description": "When true, all messages will be cached after the connection. If false, old messages will selectively not be cached, allowing large accounts to run faster. Working after reconnect.",
+          "default": false
+        }
+      },
+      "required": []
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X PATCH -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/settings\""
+      }
+    ]
+  },
+  {
+    "toolName": "loginUser",
+    "summary": "Login user with QR-base64",
+    "description": "This method returns an image of the type base64. You can render this in a component of the type image that is compatible with the language that you use to program. Just like on WhatsApp Web you will need to read a QR code to connect to Whapi.Cloud. There are two ways that you can do the reading of the QR code. Connect through our dashboard panel or Make this experience available within your own application.",
+    "tags": [
+      "Users"
+    ],
+    "http": {
+      "method": "GET",
+      "path": "/users/login",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "wakeup",
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "description": "If set to false, the channel will not launch"
+        },
+        {
+          "name": "size",
+          "type": "number",
+          "required": false,
+          "description": "Size of QR-code"
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "required": false,
+          "description": "Width of result image"
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "required": false,
+          "description": "Height of result image"
+        },
+        {
+          "name": "color_light",
+          "type": "string",
+          "required": false,
+          "description": "Background color"
+        },
+        {
+          "name": "color_dark",
+          "type": "string",
+          "required": false,
+          "description": "Color of code"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": null,
+        "schema": null,
+        "fields": []
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "wakeup": {
+          "type": "boolean",
+          "description": "If set to false, the channel will not launch",
+          "default": true
+        },
+        "size": {
+          "type": "number",
+          "description": "Size of QR-code"
+        },
+        "width": {
+          "type": "number",
+          "description": "Width of result image"
+        },
+        "height": {
+          "type": "number",
+          "description": "Height of result image"
+        },
+        "color_light": {
+          "type": "string",
+          "description": "Background color"
+        },
+        "color_dark": {
+          "type": "string",
+          "description": "Color of code"
+        }
+      },
+      "required": []
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X GET -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/users/login?wakeup=true&size=&width=&height=&color_light=&color_dark=\""
+      }
+    ]
+  },
+  {
+    "toolName": "getMessages",
+    "summary": "Get messages",
+    "description": "The method contains a list of all received and sent messages in a particular chat. Sorting by descending date of message sending.",
+    "tags": [
+      "Messages"
+    ],
+    "http": {
+      "method": "GET",
+      "path": "/messages/list",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "count",
+          "type": "number",
+          "required": false,
+          "default": 100,
+          "description": "Count of objects to return"
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "required": false,
+          "description": "Offset of objects to return"
+        },
+        {
+          "name": "time_from",
+          "type": "number",
+          "required": false,
+          "description": "Timestamp from which to get objects"
+        },
+        {
+          "name": "time_to",
+          "type": "number",
+          "required": false,
+          "description": "Timestamp up to which to get objects"
+        },
+        {
+          "name": "normal_types",
+          "type": "boolean",
+          "required": false,
+          "description": "If false, include system messages"
+        },
+        {
+          "name": "author",
+          "type": "string",
+          "required": false,
+          "description": "To filter by author (Contact ID)"
+        },
+        {
+          "name": "from_me",
+          "type": "boolean",
+          "required": false,
+          "description": "If true, only return messages sent by the authenticated user. If false, only return messages sent by other users."
+        },
+        {
+          "name": "sort",
+          "type": "string",
+          "required": false,
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "description": "Order for items in request"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": null,
+        "schema": null,
+        "fields": []
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "number",
+          "description": "Count of objects to return",
+          "default": 100
+        },
+        "offset": {
+          "type": "number",
+          "description": "Offset of objects to return"
+        },
+        "time_from": {
+          "type": "number",
+          "description": "Timestamp from which to get objects"
+        },
+        "time_to": {
+          "type": "number",
+          "description": "Timestamp up to which to get objects"
+        },
+        "normal_types": {
+          "type": "boolean",
+          "description": "If false, include system messages"
+        },
+        "author": {
+          "type": "string",
+          "description": "To filter by author (Contact ID)"
+        },
+        "from_me": {
+          "type": "boolean",
+          "description": "If true, only return messages sent by the authenticated user. If false, only return messages sent by other users."
+        },
+        "sort": {
+          "type": "string",
+          "description": "Order for items in request",
+          "enum": [
+            "asc",
+            "desc"
+          ]
+        }
+      },
+      "required": []
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X GET -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/messages/list?count=100&offset=&time_from=&time_to=&normal_types=&author=&from_me=&sort=\""
+      }
+    ]
+  },
+  {
+    "toolName": "sendMessageText",
+    "summary": "💬 Send text message",
+    "description": "This endpoint will let you send messages to any WhatsApp-enabled phone number or to any WhatsApp Group/Channel using your own number connected to Whapi.Cloud. Follow the instructions if you want to [format text](https://support.whapi.cloud/help-desk/faq/whatsapp-text-formatting), [send a emoji](https://support.whapi.cloud/help-desk/sending/send-emoji) or [use line breaks](https://support.whapi.cloud/help-desk/faq/how-to-send-a-paragraph-line-break).",
+    "tags": [
+      "Messages"
+    ],
+    "http": {
+      "method": "POST",
+      "path": "/messages/text",
+      "pathParams": [],
+      "queryParams": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "schema": {
+          "title": "Message text send parameters",
+          "type": "object",
+          "required": [
+            "body",
+            "to"
+          ],
+          "properties": {
+            "to": {
+              "type": "string",
+              "description": "Use the phone number or [Chat ID](https://support.whapi.cloud/help-desk/faq/chat-id.-what-is-it-and-how-to-get-it) of the contact/group/channel to which you want to send the message. Use [Get groups](https://whapi.readme.io/reference/getgroups) to get the group ID.",
+              "pattern": "^[\\d-]{9,31}(@[\\w\\.]{1,})?$",
+              "example": "1234567891@s.whatsapp.net"
+            },
+            "quoted": {
+              "type": "string",
+              "description": "Message ID of the message to be quoted",
+              "pattern": "^[A-Za-z0-9._]{4,30}-[A-Za-z0-9._]{4,14}(-[A-Za-z0-9._]{4,10})?(-[A-Za-z0-9._]{2,10})?$"
+            },
+            "edit": {
+              "type": "string",
+              "description": "Message ID of the message to be edited",
+              "pattern": "^[A-Za-z0-9._]{4,30}-[A-Za-z0-9._]{4,14}(-[A-Za-z0-9._]{4,10})?(-[A-Za-z0-9._]{2,10})?$"
+            },
+            "body": {
+              "description": "Message text",
+              "type": "string"
+            },
+            "typing_time": {
+              "type": "number",
+              "description": "Time in seconds to simulate typing",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 60
+            },
+            "no_link_preview": {
+              "type": "boolean",
+              "description": "Set \"true\" if necessary to send the link without preview"
+            },
+            "wide_link_preview": {
+              "type": "boolean",
+              "description": "Set \"true\" to try to send the fullwidth link preview"
+            },
+            "mentions": {
+              "type": "array",
+              "description": "The numbers of the mentioned users",
+              "items": {
+                "type": "string",
+                "pattern": "^\\d{7,15}(@s\\.whatsapp\\.net)?$|^\\d{10,31}@g\\.us$"
+              }
+            }
+          }
+        },
+        "fields": [
+          {
+            "name": "to",
+            "type": "string",
+            "required": true,
+            "description": "Use the phone number or [Chat ID](https://support.whapi.cloud/help-desk/faq/chat-id.-what-is-it-and-how-to-get-it) of the contact/group/channel to which you want to send the message. Use [Get groups](https://whapi.readme.io/reference/getgroups) to get the group ID."
+          },
+          {
+            "name": "quoted",
+            "type": "string",
+            "required": false,
+            "description": "Message ID of the message to be quoted"
+          },
+          {
+            "name": "edit",
+            "type": "string",
+            "required": false,
+            "description": "Message ID of the message to be edited"
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "required": true,
+            "description": "Message text"
+          },
+          {
+            "name": "typing_time",
+            "type": "number",
+            "required": false,
+            "default": 0,
+            "description": "Time in seconds to simulate typing"
+          },
+          {
+            "name": "no_link_preview",
+            "type": "boolean",
+            "required": false,
+            "description": "Set \"true\" if necessary to send the link without preview"
+          },
+          {
+            "name": "wide_link_preview",
+            "type": "boolean",
+            "required": false,
+            "description": "Set \"true\" to try to send the fullwidth link preview"
+          },
+          {
+            "name": "mentions",
+            "type": "array",
+            "required": false,
+            "description": "The numbers of the mentioned users"
+          }
+        ]
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "to": {
+          "type": "string",
+          "description": "Use the phone number or [Chat ID](https://support.whapi.cloud/help-desk/faq/chat-id.-what-is-it-and-how-to-get-it) of the contact/group/channel to which you want to send the message. Use [Get groups](https://whapi.readme.io/reference/getgroups) to get the group ID."
+        },
+        "quoted": {
+          "type": "string",
+          "description": "Message ID of the message to be quoted"
+        },
+        "edit": {
+          "type": "string",
+          "description": "Message ID of the message to be edited"
+        },
+        "body": {
+          "type": "string",
+          "description": "Message text"
+        },
+        "typing_time": {
+          "type": "number",
+          "description": "Time in seconds to simulate typing",
+          "default": 0
+        },
+        "no_link_preview": {
+          "type": "boolean",
+          "description": "Set \"true\" if necessary to send the link without preview"
+        },
+        "wide_link_preview": {
+          "type": "boolean",
+          "description": "Set \"true\" to try to send the fullwidth link preview"
+        },
+        "mentions": {
+          "type": "array",
+          "description": "The numbers of the mentioned users"
+        }
+      },
+      "required": [
+        "to",
+        "body"
+      ]
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X POST -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/messages/text\""
+      }
+    ]
+  },
+  {
+    "toolName": "sendMediaMessage",
+    "summary": "📎 Send media message",
+    "description": "Additional endpoint for easy send media-file as message.\nUse request body as file and inpath parameters for send parameters.\nMedia message can be one of the following types:\n- 📷 image\n- 🎥 video\n- 🎬 gif\n- 🎵 audio\n- 🎤 voice\n- 📄 document\n- 🎭 sticker\n",
+    "tags": [
+      "Messages"
+    ],
+    "http": {
+      "method": "POST",
+      "path": "/messages/media/{MediaMessageType}",
+      "pathParams": [
+        {
+          "name": "MediaMessageType",
+          "type": "string",
+          "required": true,
+          "description": "Media message type"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "SendParams",
+          "type": "object",
+          "required": true,
+          "description": "Send sender parameters via query"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "schema": {
+          "title": "Message media file parameters for media upload",
+          "description": "Media file to upload.\n",
+          "type": "object",
+          "properties": {
+            "no_encode": {
+              "description": "Do not use our encoding",
+              "type": "boolean"
+            },
+            "media": {
+              "anyOf": [
+                {
+                  "title": "Media with upload from file",
+                  "description": "File to upload",
+                  "type": "string",
+                  "format": "binary"
+                },
+                {
+                  "title": "Media with upload from URL",
+                  "description": "Media file URL for upload",
+                  "type": "string"
+                },
+                {
+                  "title": "Media with upload from base64",
+                  "description": "Base64 encoded file to upload",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        "fields": [
+          {
+            "name": "no_encode",
+            "type": "boolean",
+            "required": false,
+            "description": "Do not use our encoding"
+          },
+          {
+            "name": "media",
+            "type": "string",
+            "required": false
+          }
+        ]
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "MediaMessageType": {
+          "type": "string",
+          "description": "Media message type",
+          "enum": [
+            "image",
+            "video",
+            "gif",
+            "audio",
+            "voice",
+            "document",
+            "sticker"
+          ]
+        },
+        "SendParams": {
+          "type": "object",
+          "description": "Send sender parameters via query"
+        },
+        "no_encode": {
+          "type": "boolean",
+          "description": "Do not use our encoding"
+        },
+        "media": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "MediaMessageType",
+        "SendParams"
+      ]
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X POST -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/messages/media/{MediaMessageType}?SendParams=\""
+      }
+    ]
+  },
+  {
+    "toolName": "getChats",
+    "summary": "Get chats",
+    "description": "This method is responsible for returning all of your chats. If you need to get a profile pic of your contacts or chats, [refer to these instructions](https://support.whapi.cloud/help-desk/receiving/http-api/get-a-profile-picture-of-a-chat-or-user).",
+    "tags": [
+      "Chats"
+    ],
+    "http": {
+      "method": "GET",
+      "path": "/chats",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "count",
+          "type": "number",
+          "required": false,
+          "default": 100,
+          "description": "Count of objects to return"
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "required": false,
+          "description": "Offset of objects to return"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": null,
+        "schema": null,
+        "fields": []
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "number",
+          "description": "Count of objects to return",
+          "default": 100
+        },
+        "offset": {
+          "type": "number",
+          "description": "Offset of objects to return"
+        }
+      },
+      "required": []
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X GET -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/chats?count=100&offset=\""
+      }
+    ]
+  },
+  {
+    "toolName": "checkPhones",
+    "summary": "Check phones",
+    "description": "This method returns whether or not the number has Whatsapp. Batch check provisioning is supported, and there is no batch check limit. However, an atypical mass check can draw attention to your number, so we advise [balancing the check between channels](https://support.whapi.cloud/help-desk/faq/checking-if-the-number-has-whatsapp)",
+    "tags": [
+      "Contacts"
+    ],
+    "http": {
+      "method": "POST",
+      "path": "/contacts",
+      "pathParams": [],
+      "queryParams": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "schema": {
+          "title": "Check contact request",
+          "required": [
+            "contacts"
+          ],
+          "type": "object",
+          "properties": {
+            "contacts": {
+              "description": "Array of contact phone numbers. The numbers can be in any standard telephone number format.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "force_check": {
+              "description": "Force check determines whether the request should check the contact even if it is already in the cache.",
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        },
+        "fields": [
+          {
+            "name": "contacts",
+            "type": "array",
+            "required": true,
+            "description": "Array of contact phone numbers. The numbers can be in any standard telephone number format."
+          },
+          {
+            "name": "force_check",
+            "type": "boolean",
+            "required": false,
+            "default": false,
+            "description": "Force check determines whether the request should check the contact even if it is already in the cache."
+          }
+        ]
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "contacts": {
+          "type": "array",
+          "description": "Array of contact phone numbers. The numbers can be in any standard telephone number format."
+        },
+        "force_check": {
+          "type": "boolean",
+          "description": "Force check determines whether the request should check the contact even if it is already in the cache.",
+          "default": false
+        }
+      },
+      "required": [
+        "contacts"
+      ]
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X POST -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/contacts\""
+      }
+    ]
+  },
+  {
+    "toolName": "getGroups",
+    "summary": "Get groups",
+    "description": null,
+    "tags": [
+      "Groups"
+    ],
+    "http": {
+      "method": "GET",
+      "path": "/groups",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "count",
+          "type": "number",
+          "required": false,
+          "default": 100,
+          "description": "Count of objects to return"
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "required": false,
+          "description": "Offset of objects to return"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": null,
+        "schema": null,
+        "fields": []
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "number",
+          "description": "Count of objects to return",
+          "default": 100
+        },
+        "offset": {
+          "type": "number",
+          "description": "Offset of objects to return"
+        }
+      },
+      "required": []
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X GET -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/groups?count=100&offset=\""
+      }
+    ]
+  },
+  {
+    "toolName": "acceptGroupInvite",
+    "summary": "Accept group invite",
+    "description": "Allows you to join a group by knowing its invitation code",
+    "tags": [
+      "Groups"
+    ],
+    "http": {
+      "method": "PUT",
+      "path": "/groups",
+      "pathParams": [],
+      "queryParams": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "schema": {
+          "title": "Group invite",
+          "description": "",
+          "type": "object",
+          "required": [
+            "invite_code"
+          ],
+          "properties": {
+            "invite_code": {
+              "type": "string"
+            }
+          }
+        },
+        "fields": [
+          {
+            "name": "invite_code",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "invite_code": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "invite_code"
+      ]
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X PUT -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/groups\""
+      }
+    ]
+  },
+  {
+    "toolName": "addGroupParticipant",
+    "summary": "Add group participant",
+    "description": "This method is responsible for adding new members to the group. Due to WhatsApp's anti-spam policy, some contacts are not automatically added to the group. [Read more here](https://support.whapi.cloud/help-desk/groups/add-new-member-to-group)",
+    "tags": [
+      "Groups"
+    ],
+    "http": {
+      "method": "POST",
+      "path": "/groups/{GroupID}/participants",
+      "pathParams": [
+        {
+          "name": "GroupID",
+          "type": "string",
+          "required": true,
+          "description": "Group ID"
+        }
+      ],
+      "queryParams": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer ${API_TOKEN}",
+          "required": true
+        }
+      ],
+      "requestBody": {
+        "contentType": "application/json",
+        "schema": {
+          "title": "List participants request",
+          "required": [
+            "participants"
+          ],
+          "type": "object",
+          "properties": {
+            "participants": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "description": "Contact ID",
+                "pattern": "^([\\d]{7,15})?$"
+              }
+            }
+          }
+        },
+        "fields": [
+          {
+            "name": "participants",
+            "type": "array",
+            "required": true
+          }
+        ]
+      },
+      "response": {
+        "contentTypes": [
+          "application/json"
+        ],
+        "successStatusRange": [
+          200,
+          299
+        ]
+      },
+      "pagination": {
+        "enabled": false,
+        "params": {
+          "limitParam": "limit",
+          "offsetParam": "offset",
+          "pageParam": null,
+          "cursorParam": null
+        }
+      },
+      "timeouts": {
+        "requestMs": 30000
+      },
+      "retries": {
+        "enabled": false,
+        "maxAttempts": 0,
+        "backoffMs": 0
+      }
+    },
+    "security": {
+      "type": "bearer",
+      "envTokenName": "API_TOKEN",
+      "headerName": "Authorization",
+      "headerTemplate": "Bearer ${API_TOKEN}"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "GroupID": {
+          "type": "string",
+          "description": "Group ID"
+        },
+        "participants": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "GroupID",
+        "participants"
+      ]
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer"
+        },
+        "content": {}
+      }
+    },
+    "errorMapping": [
+      {
+        "status": 400,
+        "error": "BadRequest"
+      },
+      {
+        "status": 401,
+        "error": "Unauthorized"
+      },
+      {
+        "status": 403,
+        "error": "Forbidden"
+      },
+      {
+        "status": 404,
+        "error": "NotFound"
+      },
+      {
+        "status": 429,
+        "error": "RateLimited"
+      },
+      {
+        "status": 500,
+        "error": "ServerError"
+      }
+    ],
+    "examples": [
+      {
+        "name": "happy-path",
+        "args": {},
+        "curl": "curl -X POST -H \"Authorization: Bearer ${API_TOKEN}\" \"https://gate.whapi.cloud/groups/{GroupID}/participants\""
+      }
+    ]
+  }
+]
