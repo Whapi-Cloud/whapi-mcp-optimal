@@ -26,7 +26,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/whapi-mcp-optimal.git"
+    "url": "https://github.com/Whapi-Cloud/whapi-mcp-optimal.git"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.10.2",
